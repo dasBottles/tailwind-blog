@@ -1,8 +1,10 @@
 import Head from 'next/head'
 import Link from 'next/dist/client/link'
-import { blogPosts } from '../lib/data'
+import { getAllPosts } from '../lib/data'
+import { format } from 'date-fns'
+import { MDXRemote } from 'next-mdx-remote'
 
-export default function Home() {
+export default function Home({posts}) {
   return (
     <div>
       <Head>
@@ -11,28 +13,46 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <h1>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-        </main>
-
-        <div>
-          {blogPosts.map((item) => {
+        <div className='space-y-4'>
+          {posts.map((item) => {
             return (
-              <div key={item.tako}>
-              <div>
-                <Link href={`/blog/${item.tako}`}>
-                  <a>{item.title}</a>
-                </Link>
-              </div>
-              <div>{item.date}</div>
-            </div>
+              <BlogListItem key={item.tako} {...item} />
             )
-          })}
-
-          {console.log('blog post items',blogPosts)}
+        })}
         </div>
     </div>
+  )
+}
+
+export async function getStaticProps(context) {
+  const { params } = context;
+  const allPost = getAllPosts();
+  return {
+    props: {
+      posts: allPost.map(({data, content, tako}) => ({
+        ...data,
+        date: format(new Date(), 'MMMM Lo, yyyy h:mm a'),
+        content,
+        tako,
+      }))
+    } 
+  }
+};
+
+
+function BlogListItem({tako, title, date, content}) {
+  return (
+    <div className='border border-black shadow rounded-md p-4 hover:shadow-lg hover:border-blue-700 transition duration-300 ease-in'>
+      <div>
+        <Link href={`/blog/${tako}`}>
+          <a className='text-lg font-bold'>{title}</a>
+          </Link>
+      </div>
+      {/* <div className='prose'>
+        <MDXRemote {...content} />
+      </div> */}
+      <div>{date}</div>
+    </div>
+
   )
 }
